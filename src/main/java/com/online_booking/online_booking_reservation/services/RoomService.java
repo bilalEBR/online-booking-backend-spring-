@@ -1,10 +1,13 @@
 package com.online_booking.online_booking_reservation.services;
 
 import com.online_booking.online_booking_reservation.dtos.RoomRequestDTO;
+import com.online_booking.online_booking_reservation.dtos.RoomResponseDTO;
 import com.online_booking.online_booking_reservation.entities.Room;
 import com.online_booking.online_booking_reservation.repositories.RoomRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -14,23 +17,43 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-   public Room createRoom(RoomRequestDTO dto) {
-    if(roomRepository.findByRoomNumber(dto.getRoomNumber()).isPresent()) {
-        throw new RuntimeException("Room number " + dto.getRoomNumber() + " already exists!");
+    public RoomResponseDTO createRoom(RoomRequestDTO dto) {
+        if(roomRepository.findByRoomNumber(dto.getRoomNumber()).isPresent()) {
+            throw new RuntimeException("Room number already exists!");
+        }
+        Room room = new Room(dto.getRoomNumber(), dto.getRoomType(), dto.getPricePerNight(), dto.getCapacity(), Room.RoomStatus.AVAILABLE, dto.getDescription());
+        return new RoomResponseDTO(roomRepository.save(room));
     }
-    
-    Room room = new Room();
-    room.setRoomNumber(dto.getRoomNumber());
-    room.setRoomType(dto.getRoomType());
-    room.setPricePerNight(dto.getPricePerNight());
-    room.setCapacity(dto.getCapacity());
-    room.setDescription(dto.getDescription());
-    room.setStatus(Room.RoomStatus.AVAILABLE); // Default status
-    
-    return roomRepository.save(room);
-}
 
-    public List<Room> getAllRooms() {
-        return roomRepository.findAll();
+    public List<RoomResponseDTO> getAllRooms() {
+        return roomRepository.findAll().stream()
+                .map(RoomResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    public RoomResponseDTO getRoomById(Long id) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        return new RoomResponseDTO(room);
+    }
+
+    public RoomResponseDTO updateRoom(Long id, RoomRequestDTO dto) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        
+        room.setRoomNumber(dto.getRoomNumber());
+        room.setRoomType(dto.getRoomType());
+        room.setPricePerNight(dto.getPricePerNight());
+        room.setCapacity(dto.getCapacity());
+        room.setDescription(dto.getDescription());
+        
+        return new RoomResponseDTO(roomRepository.save(room));
+    }
+
+    public void deleteRoom(Long id) {
+        if (!roomRepository.existsById(id)) {
+            throw new RuntimeException("Room not found");
+        }
+        roomRepository.deleteById(id);
     }
 }
