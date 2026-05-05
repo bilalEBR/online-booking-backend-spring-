@@ -1,17 +1,84 @@
 package com.online_booking.online_booking_reservation.config;
 
+import com.online_booking.online_booking_reservation.entities.*;
+import com.online_booking.online_booking_reservation.repositories.*;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
 @Configuration
 public class ProjectConfig implements WebMvcConfigurer {
 
+    // --- CORS Configuration ---
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Allows any frontend (like React or a simple HTML file) to access your API
         registry.addMapping("/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE");
+    }
+
+    // --- Database Seeder Configuration ---
+    @Bean
+    public CommandLineRunner seedDatabase(UserRepository userRepo, 
+                                          RoomRepository roomRepo, 
+                                          BookingRepository bookingRepo) {
+        return args -> {
+            // 1. Seed Users if table is empty
+            if (userRepo.count() == 0) {
+                User manager = new User("admin@hotel.com", "admin123", "Main Manager", "111-222", User.UserRole.MANAGER);
+                User receptionist = new User("staff@hotel.com", "staff123", "Receptionist Jane", "333-444", User.UserRole.RECEPTIONIST);
+                User guest = new User("guest@test.com", "guest123", "John Guest", "555-666", User.UserRole.GUEST);
+                
+                userRepo.saveAll(Arrays.asList(manager, receptionist, guest));
+                System.out.println(">> Users seeded successfully.");
+            }
+
+            // 2. Seed Rooms if table is empty
+            if (roomRepo.count() == 0) {
+                Room r1 = new Room("101", Room.RoomType.SINGLE, 55.0, 1, Room.RoomStatus.AVAILABLE, "Cozy single bed");
+                Room r2 = new Room("201", Room.RoomType.DELUXE, 150.0, 2, Room.RoomStatus.AVAILABLE, "Luxury sea view");
+                Room r3 = new Room("305", Room.RoomType.SUITE, 300.0, 4, Room.RoomStatus.MAINTENANCE, "Large family suite");
+                
+                roomRepo.saveAll(Arrays.asList(r1, r2, r3));
+                System.out.println(">> Rooms seeded successfully.");
+            }
+
+            // 3. Seed a Sample Booking (to verify relationships)
+          // 3. Seed a Sample Booking (Updated with Receptionist)
+if (bookingRepo.count() == 0) {
+    User sampleGuest = userRepo.findByEmail("guest@test.com").orElse(null);
+    User sampleReceptionist = userRepo.findByEmail("staff@hotel.com").orElse(null); // Fetch the receptionist
+    Room sampleRoom = roomRepo.findAll().stream().findFirst().orElse(null);
+
+    if (sampleGuest != null && sampleRoom != null) {
+        Booking booking = new Booking();
+        booking.setGuest(sampleGuest);
+        booking.setRoom(sampleRoom);
+        
+        // Use the new naming here:
+        booking.setReceptionist(sampleReceptionist); 
+
+        booking.setCheckInDate(LocalDate.now().plusDays(1));
+        booking.setCheckOutDate(LocalDate.now().plusDays(3));
+        booking.setTotalPrice(sampleRoom.getPricePerNight() * 2);
+        
+        // Since a receptionist is already assigned in this seed, 
+        // we can set the status to CONFIRMED instead of PENDING
+        booking.setStatus(Booking.BookingStatus.CONFIRMED); 
+        
+        booking.setTransactionNum("TXN_SEED_001");
+        booking.setCreatedAt(LocalDateTime.now());
+
+        bookingRepo.save(booking);
+        System.out.println(">> Sample Booking seeded and confirmed by " + sampleReceptionist.getFullName());
+    }
+}
+        };
     }
 }
