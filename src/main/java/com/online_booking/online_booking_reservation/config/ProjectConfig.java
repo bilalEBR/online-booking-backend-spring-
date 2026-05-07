@@ -2,10 +2,21 @@ package com.online_booking.online_booking_reservation.config;
 
 import com.online_booking.online_booking_reservation.entities.*;
 import com.online_booking.online_booking_reservation.repositories.*;
+import com.online_booking.online_booking_reservation.security.JwtAuthenticationFilter;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.LocalDate;
@@ -19,8 +30,11 @@ public class ProjectConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE");
+               .allowedOrigins("http://localhost:3000")
+               .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*");
+
+                // .allowedMethods("GET", "POST", "PUT", "DELETE");
     }
 
     // --- Database Seeder Configuration ---
@@ -81,4 +95,48 @@ if (bookingRepo.count() == 0) {
 }
         };
     }
+
+
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+   // Inside SecurityConfig.java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(request -> {
+            var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
+            corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
+            corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            corsConfiguration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type")); // ALLOW AUTHORIZATION
+            return corsConfiguration;
+        }))
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
+            .anyRequest().authenticated()
+        )
+        // ADD THE FILTER HERE
+        .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
+}
+
+@Bean
+public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    return config.getAuthenticationManager();
+}
+
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    // Expose the "uploads" folder to the outside world
+    registry.addResourceHandler("/uploads/**")
+            .addResourceLocations("file:uploads/");
+}
 }

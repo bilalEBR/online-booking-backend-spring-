@@ -1,7 +1,7 @@
 package com.online_booking.online_booking_reservation.entities;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
+import java.util.List;
 @Entity
 @Table(name = "users")
 public class User {
@@ -25,6 +25,17 @@ public class User {
     private UserRole role;
 
     private LocalDateTime createdAt;
+
+    // 1. Link to bookings where this user is the Guest
+    @OneToMany(mappedBy = "guest", cascade = CascadeType.REMOVE, orphanRemoval = true)
+   
+    private List<Booking> guestBookings;
+
+
+    
+    // 2. Link to bookings where this user is the Receptionist
+    @OneToMany(mappedBy = "receptionist", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Booking> managedBookings;
 
     public User() {}
 

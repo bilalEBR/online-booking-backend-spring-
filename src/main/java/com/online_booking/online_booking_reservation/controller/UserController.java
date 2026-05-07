@@ -22,10 +22,11 @@ public class UserController {
     }
 
     // POST: http://localhost:8080/api/users/register
-  @PostMapping("/register")
+@PostMapping("/register")
 public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequestDTO dto) {
     try {
-        User createdUser = userService.createUser(dto);
+        // Change the service call to return a ResponseDTO
+        UserResponseDTO createdUser = userService.createUser(dto); 
         return ResponseEntity.ok(createdUser);
     } catch (RuntimeException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
@@ -33,6 +34,17 @@ public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequestDTO dto) {
 }
 
 // Inside UserController.java
+
+@PostMapping("/staff")
+public ResponseEntity<?> createStaff(@Valid @RequestBody UserRequestDTO dto) {
+    try {
+        // We reuse the service logic but override the role explicitly inside the service
+        UserResponseDTO createdStaff = userService.createStaff(dto);
+        return ResponseEntity.ok(createdStaff);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
 
 // Get all users (For Manager)
 @GetMapping

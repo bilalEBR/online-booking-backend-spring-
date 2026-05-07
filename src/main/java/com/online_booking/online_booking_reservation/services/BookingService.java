@@ -76,4 +76,12 @@ public class BookingService {
 
         return new BookingResponseDTO(bookingRepository.save(booking));
     }
+
+    // Inside BookingService.java
+public void deleteBooking(Long id) {
+    if (!bookingRepository.existsById(id)) {
+        throw new RuntimeException("Booking not found");
+    }
+    bookingRepository.deleteById(id);
+}
 }

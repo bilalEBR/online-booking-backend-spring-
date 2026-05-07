@@ -4,10 +4,12 @@ import com.online_booking.online_booking_reservation.dtos.UserRequestDTO;
 import com.online_booking.online_booking_reservation.dtos.UserResponseDTO;
 import com.online_booking.online_booking_reservation.entities.User;
 import com.online_booking.online_booking_reservation.repositories.UserRepository;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -15,12 +17,48 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder; 
 
-    public UserService(UserRepository userRepository) {
+
+     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public User createUser(UserRequestDTO dto) {
+   public UserResponseDTO createUser(UserRequestDTO dto) {
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already in use!");
+        }
+
+        User user = new User();
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        
+        // IMPORTANT: Hash the password
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword())); 
+        
+        user.setPhone(dto.getPhone());
+        user.setRole(User.UserRole.GUEST);
+        user.setCreatedAt(LocalDateTime.now());
+
+        User savedUser = userRepository.save(user);
+
+        // Return the safe DTO
+        return new UserResponseDTO(
+            savedUser.getId(), 
+            savedUser.getFullName(), 
+            savedUser.getEmail(), 
+            savedUser.getPhone(), 
+            savedUser.getRole().name()
+        );
+    }
+
+
+
+
+// Inside UserService.java
+
+public UserResponseDTO createStaff(UserRequestDTO dto) {
     if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
         throw new RuntimeException("Email already in use!");
     }
@@ -28,17 +66,16 @@ public class UserService {
     User user = new User();
     user.setFullName(dto.getFullName());
     user.setEmail(dto.getEmail());
-    user.setPasswordHash(dto.getPassword()); // In real app, encode this!
+    user.setPasswordHash(passwordEncoder.encode(dto.getPassword())); 
     user.setPhone(dto.getPhone());
-    user.setRole(User.UserRole.GUEST); // Default role for registration
+    user.setRole(User.UserRole.RECEPTIONIST); // Explicitly set role to RECEPTIONIST
     user.setCreatedAt(LocalDateTime.now());
 
-    return userRepository.save(user);
+    User saved = userRepository.save(user);
+    return new UserResponseDTO(saved.getId(), saved.getFullName(), saved.getEmail(), saved.getPhone(), saved.getRole().name());
 }
 
 
-
-// Inside UserService.java
 
 public List<UserResponseDTO> getAllUsers() {
     return userRepository.findAll().stream()
