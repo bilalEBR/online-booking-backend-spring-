@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -41,15 +41,18 @@ public class ProjectConfig implements WebMvcConfigurer {
     @Bean
     public CommandLineRunner seedDatabase(UserRepository userRepo, 
                                           RoomRepository roomRepo, 
-                                          BookingRepository bookingRepo) {
+                                          BookingRepository bookingRepo,
+                                        PasswordEncoder passwordEncoder) {
         return args -> {
             // 1. Seed Users if table is empty
             if (userRepo.count() == 0) {
-                User manager = new User("admin@hotel.com", "admin123", "Main Manager", "111-222", User.UserRole.MANAGER);
-                User receptionist = new User("staff@hotel.com", "staff123", "Receptionist Jane", "333-444", User.UserRole.RECEPTIONIST);
-                User guest = new User("guest@test.com", "guest123", "John Guest", "555-666", User.UserRole.GUEST);
+                User manager = new User("admin@hotel.com", passwordEncoder.encode("password"), "Bilal Ebrahim", "111-222", User.UserRole.MANAGER);
+                User receptionist = new User("staff@hotel.com", passwordEncoder.encode("password"), "Geleta Birhanu", "333-444", User.UserRole.RECEPTIONIST);
+                User guest = new User("guest@hotel.com", passwordEncoder.encode("password"), "Yeabsra Asfaw", "555-666", User.UserRole.GUEST);
+                User memar = new User("memar@hotel.com", passwordEncoder.encode("password"), "Memar teshome ", "555-666", User.UserRole.GUEST);
+
                 
-                userRepo.saveAll(Arrays.asList(manager, receptionist, guest));
+                userRepo.saveAll(Arrays.asList(manager, receptionist, guest,memar));
                 System.out.println(">> Users seeded successfully.");
             }
 
