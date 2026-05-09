@@ -23,6 +23,9 @@ public class BookingRequestDTO {
 
     private String screenshotUrl;
 
+    @NotBlank(message = "Sender name is required")
+private String senderFullName;
+
     // Getters and Setters
     public Long getGuestId() { return guestId; }
     public void setGuestId(Long guestId) { this.guestId = guestId; }
@@ -36,4 +39,6 @@ public class BookingRequestDTO {
     public void setTransactionNum(String transactionNum) { this.transactionNum = transactionNum; }
     public String getScreenshotUrl() { return screenshotUrl; }
     public void setScreenshotUrl(String screenshotUrl) { this.screenshotUrl = screenshotUrl; }
+    public String getSenderFullName() { return senderFullName; }
+public void setSenderFullName(String senderFullName) { this.senderFullName = senderFullName; }
 }

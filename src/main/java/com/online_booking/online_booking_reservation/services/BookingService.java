@@ -41,6 +41,7 @@ public class BookingService {
         booking.setCheckOutDate(dto.getCheckOutDate());
         booking.setTransactionNum(dto.getTransactionNum());
         booking.setScreenshotUrl(dto.getScreenshotUrl());
+        booking.setSenderFullName(dto.getSenderFullName()); 
         booking.setTotalPrice(nights * room.getPricePerNight());
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());

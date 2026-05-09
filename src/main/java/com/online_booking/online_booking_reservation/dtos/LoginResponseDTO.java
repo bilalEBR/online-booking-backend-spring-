@@ -1,11 +1,12 @@
 package com.online_booking.online_booking_reservation.dtos;
 
 public class LoginResponseDTO {
-    private Long id; // Add this
+    private Long id; 
     private String token;
     private String fullName;
     private String email;
     private String role;
+    
 
     public LoginResponseDTO(Long id, String token, String fullName, String email, String role) {
         this.id = id;

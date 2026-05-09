@@ -34,7 +34,7 @@ public class ProjectConfig implements WebMvcConfigurer {
                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
 
-                // .allowedMethods("GET", "POST", "PUT", "DELETE");
+              
     }
 
     // --- Database Seeder Configuration ---
@@ -112,13 +112,14 @@ public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilte
         .cors(cors -> cors.configurationSource(request -> {
             var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
             corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
-            corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS"));
             corsConfiguration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type")); // ALLOW AUTHORIZATION
             return corsConfiguration;
         }))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
+            .requestMatchers("/uploads/**").permitAll() 
             .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
             .anyRequest().authenticated()
         )
@@ -139,4 +140,6 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
     registry.addResourceHandler("/uploads/**")
             .addResourceLocations("file:uploads/");
 }
+
+
 }

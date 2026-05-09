@@ -19,6 +19,8 @@ public class RoomRequestDTO {
 
     private String description;
 
+     private Room.RoomStatus status;
+
     // Getters and Setters
     public String getRoomNumber() { return roomNumber; }
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
@@ -30,4 +32,6 @@ public class RoomRequestDTO {
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+     public Room.RoomStatus getStatus() { return status; }
+    public void setStatus(Room.RoomStatus status) { this.status = status; }
 }

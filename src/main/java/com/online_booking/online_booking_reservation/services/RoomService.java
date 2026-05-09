@@ -4,6 +4,8 @@ import com.online_booking.online_booking_reservation.dtos.RoomRequestDTO;
 import com.online_booking.online_booking_reservation.dtos.RoomResponseDTO;
 import com.online_booking.online_booking_reservation.entities.Room;
 import com.online_booking.online_booking_reservation.repositories.RoomRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,11 +27,21 @@ public class RoomService {
         return new RoomResponseDTO(roomRepository.save(room));
     }
 
-    public List<RoomResponseDTO> getAllRooms() {
-        return roomRepository.findAll().stream()
-                .map(RoomResponseDTO::new)
-                .collect(Collectors.toList());
-    }
+    // public List<RoomResponseDTO> getAllRooms() {
+    //     return roomRepository.findAll().stream()
+    //             .map(RoomResponseDTO::new)
+    //             .collect(Collectors.toList());
+    // }
+
+
+    @Autowired private CurrencyService currencyService;
+
+public List<RoomResponseDTO> getAllRooms() {
+    Double rate = currencyService.getEtbToUsdRate();
+    return roomRepository.findAll().stream()
+            .map(room -> new RoomResponseDTO(room, rate))
+            .collect(Collectors.toList());
+}
 
     public RoomResponseDTO getRoomById(Long id) {
         Room room = roomRepository.findById(id)
@@ -46,6 +58,10 @@ public class RoomService {
         room.setPricePerNight(dto.getPricePerNight());
         room.setCapacity(dto.getCapacity());
         room.setDescription(dto.getDescription());
+        
+       if (dto.getStatus() != null) {
+        room.setStatus(dto.getStatus());
+    }
         
         return new RoomResponseDTO(roomRepository.save(room));
     }

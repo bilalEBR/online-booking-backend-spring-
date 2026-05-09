@@ -1,5 +1,7 @@
 package com.online_booking.online_booking_reservation.dtos;
 
+import com.online_booking.online_booking_reservation.entities.Room;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,6 +22,8 @@ public class UserRequestDTO {
     @NotBlank(message = "Phone number is required")
     private String phone;
 
+     
+
     // Getters and Setters
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
@@ -29,4 +33,5 @@ public class UserRequestDTO {
     public void setPassword(String password) { this.password = password; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+   
 }

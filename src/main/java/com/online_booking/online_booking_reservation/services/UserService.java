@@ -102,15 +102,52 @@ public void deleteUser(Long id) {
 }
 
 // Update User (Manager updating a guest/staff)
+// public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
+//     User user = userRepository.findById(id)
+//             .orElseThrow(() -> new RuntimeException("User not found"));
+    
+//     user.setFullName(dto.getFullName());
+//     user.setPhone(dto.getPhone());
+//     // Note: Usually we don't allow changing email here to avoid logic issues
+    
+//     User updated = userRepository.save(user);
+//     return new UserResponseDTO(updated.getId(), updated.getFullName(), updated.getEmail(), updated.getPhone(), updated.getRole().toString());
+// }
+
+// Inside UserService.java
+
 public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found"));
-    
+
+    // 1. Only check email if it's different from the current one
+    if (!user.getEmail().equalsIgnoreCase(dto.getEmail())) {
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RuntimeException("This email is already taken by another account");
+        }
+        user.setEmail(dto.getEmail());
+    }
+
+    // 2. Update basic info
     user.setFullName(dto.getFullName());
     user.setPhone(dto.getPhone());
-    // Note: Usually we don't allow changing email here to avoid logic issues
-    
+
+    // 3. SECURE PASSWORD CHECK
+    // Only update password if it's NOT the placeholder and NOT empty
+    if (dto.getPassword() != null && 
+        !dto.getPassword().isEmpty() && 
+        !dto.getPassword().equals("EXISTING_USER")) {
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+    }
+
     User updated = userRepository.save(user);
-    return new UserResponseDTO(updated.getId(), updated.getFullName(), updated.getEmail(), updated.getPhone(), updated.getRole().toString());
+    
+    return new UserResponseDTO(
+        updated.getId(), 
+        updated.getFullName(), 
+        updated.getEmail(), 
+        updated.getPhone(), 
+        updated.getRole().name()
+    );
 }
 }

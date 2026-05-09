@@ -30,6 +30,7 @@ public class Booking {
 
     private String transactionNum;
     private String screenshotUrl;
+    private String senderFullName;
 
     @ManyToOne
 @JoinColumn(name = "receptionist_id") // This will show as receptionist_id in the DB
@@ -67,4 +68,6 @@ private User receptionist;
     }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getSenderFullName() { return senderFullName; }
+    public void setSenderFullName(String senderFullName) { this.senderFullName = senderFullName; }
 }

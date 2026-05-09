@@ -13,6 +13,9 @@ public class BookingResponseDTO {
     private String status;
     private String transactionNum;
     private String receptionistName;
+private String senderFullName;
+   
+    private String screenshotUrl;
 
     public BookingResponseDTO(Booking booking) {
         this.id = booking.getId();
@@ -26,6 +29,9 @@ public class BookingResponseDTO {
         if (booking.getReceptionist() != null) {
             this.receptionistName = booking.getReceptionist().getFullName();
         }
+
+        this.screenshotUrl = booking.getScreenshotUrl();
+        this.senderFullName = booking.getSenderFullName();
     }
 
     // Getters
@@ -38,4 +44,6 @@ public class BookingResponseDTO {
     public String getStatus() { return status; }
     public String getTransactionNum() { return transactionNum; }
     public String getReceptionistName() { return receptionistName; }
+    public String getScreenshotUrl() { return screenshotUrl; }
+    public String getSenderFullName() { return senderFullName; }
 }
