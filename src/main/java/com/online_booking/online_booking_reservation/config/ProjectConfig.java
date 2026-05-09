@@ -30,10 +30,12 @@ public class ProjectConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-               .allowedOrigins("http://localhost:3000")
+            .allowedOrigins(
+               "http://localhost:3000", 
+               "https://online-booking-frontend-nextjs.onrender.com"
+            )        
                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
-
               
     }
 
@@ -114,7 +116,10 @@ public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilte
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(request -> {
             var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
+             corsConfiguration.setAllowedOrigins(java.util.List.of(
+                "http://localhost:3000", 
+                "https://online-booking-frontend-nextjs.onrender.com"
+            ));
             corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS"));
             corsConfiguration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type")); // ALLOW AUTHORIZATION
             return corsConfiguration;
