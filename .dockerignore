@@ -1,0 +1,9 @@
+target/
+*.log
+.git/
+.mvn/
+mvnw
+mvnw.cmd
+.env
+.next/
+node_modules/
