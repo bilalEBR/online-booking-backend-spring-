@@ -34,8 +34,8 @@ public class User {
 
     
     
-   @OneToMany(mappedBy = "receptionist")
-    private List<Booking> managedBookings;
+   @OneToMany(mappedBy = "receptionist", cascade = CascadeType.REMOVE, orphanRemoval = true)
+private List<Booking> managedBookings;
 
     public User() {}
 

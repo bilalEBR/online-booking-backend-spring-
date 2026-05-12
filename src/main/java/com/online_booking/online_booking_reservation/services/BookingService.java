@@ -7,7 +7,7 @@ import com.online_booking.online_booking_reservation.repositories.*;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -26,13 +26,46 @@ public class BookingService {
         this.roomRepository = roomRepository;
     }
 
-    // CREATE
+    // // CREATE
+    // @PreAuthorize("isAuthenticated()")
+    // public BookingResponseDTO createBooking(BookingRequestDTO dto) {
+    //     User guest = userRepository.findById(dto.getGuestId())
+    //             .orElseThrow(() -> new RuntimeException("Guest not found"));
+    //     Room room = roomRepository.findById(dto.getRoomId())
+    //             .orElseThrow(() -> new RuntimeException("Room not found"));
+
+    //     long nights = ChronoUnit.DAYS.between(dto.getCheckInDate(), dto.getCheckOutDate());
+    //     if (nights <= 0) throw new RuntimeException("Invalid dates: Check-out must be after check-in");
+
+    //     Booking booking = new Booking();
+    //     booking.setGuest(guest);
+    //     booking.setRoom(room);
+    //     booking.setCheckInDate(dto.getCheckInDate());
+    //     booking.setCheckOutDate(dto.getCheckOutDate());
+    //     booking.setTransactionNum(dto.getTransactionNum());
+    //     booking.setScreenshotUrl(dto.getScreenshotUrl());
+    //     booking.setSenderFullName(dto.getSenderFullName()); 
+    //     booking.setTotalPrice(nights * room.getPricePerNight());
+    //     booking.setStatus(Booking.BookingStatus.PENDING);
+    //     booking.setCreatedAt(LocalDateTime.now());
+
+    //     Booking saved = bookingRepository.save(booking);
+    //     return new BookingResponseDTO(saved);
+    // }
+
+     @Transactional // Ensures room update and booking save are one atomic action
     @PreAuthorize("isAuthenticated()")
     public BookingResponseDTO createBooking(BookingRequestDTO dto) {
         User guest = userRepository.findById(dto.getGuestId())
                 .orElseThrow(() -> new RuntimeException("Guest not found"));
         Room room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        // 1. SAFETY CHECK: If this throws, you get a 400. 
+        // Make sure your room in DB is set to 'AVAILABLE' before testing!
+        if (room.getStatus() != Room.RoomStatus.AVAILABLE) {
+            throw new RuntimeException("Room " + room.getRoomNumber() + " is currently " + room.getStatus());
+        }
 
         long nights = ChronoUnit.DAYS.between(dto.getCheckInDate(), dto.getCheckOutDate());
         if (nights <= 0) throw new RuntimeException("Invalid dates: Check-out must be after check-in");
@@ -48,6 +81,10 @@ public class BookingService {
         booking.setTotalPrice(nights * room.getPricePerNight());
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
+
+        // 2. ALTER ROOM STATUS
+        room.setStatus(Room.RoomStatus.OCCUPIED);
+        roomRepository.save(room); // Update the room in DB
 
         Booking saved = bookingRepository.save(booking);
         return new BookingResponseDTO(saved);
@@ -69,7 +106,22 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
-    // UPDATE STATUS (Receptionist Feature)
+    // // UPDATE STATUS (Receptionist Feature)
+    // @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
+    // public BookingResponseDTO updateStatus(Long bookingId, String status, Long receptionistId) {
+    //     Booking booking = bookingRepository.findById(bookingId)
+    //             .orElseThrow(() -> new RuntimeException("Booking not found"));
+        
+    //     User receptionist = userRepository.findById(receptionistId)
+    //             .orElseThrow(() -> new RuntimeException("Receptionist not found"));
+
+    //     booking.setStatus(Booking.BookingStatus.valueOf(status.toUpperCase()));
+    //     booking.setReceptionist(receptionist);
+
+    //     return new BookingResponseDTO(bookingRepository.save(booking));
+    // }
+
+    @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
     public BookingResponseDTO updateStatus(Long bookingId, String status, Long receptionistId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -78,8 +130,16 @@ public class BookingService {
         User receptionist = userRepository.findById(receptionistId)
                 .orElseThrow(() -> new RuntimeException("Receptionist not found"));
 
-        booking.setStatus(Booking.BookingStatus.valueOf(status.toUpperCase()));
+        Booking.BookingStatus newStatus = Booking.BookingStatus.valueOf(status.toUpperCase());
+        booking.setStatus(newStatus);
         booking.setReceptionist(receptionist);
+
+        // 3. RELEASE ROOM IF CANCELLED OR CHECKED OUT
+        if (newStatus == Booking.BookingStatus.CANCELLED || newStatus == Booking.BookingStatus.CHECKED_OUT) {
+            Room room = booking.getRoom();
+            room.setStatus(Room.RoomStatus.AVAILABLE);
+            roomRepository.save(room);
+        }
 
         return new BookingResponseDTO(bookingRepository.save(booking));
     }
