@@ -4,6 +4,8 @@ import com.online_booking.online_booking_reservation.dtos.BookingRequestDTO;
 import com.online_booking.online_booking_reservation.dtos.BookingResponseDTO;
 import com.online_booking.online_booking_reservation.entities.*;
 import com.online_booking.online_booking_reservation.repositories.*;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,6 +27,7 @@ public class BookingService {
     }
 
     // CREATE
+    @PreAuthorize("isAuthenticated()")
     public BookingResponseDTO createBooking(BookingRequestDTO dto) {
         User guest = userRepository.findById(dto.getGuestId())
                 .orElseThrow(() -> new RuntimeException("Guest not found"));
@@ -51,6 +54,7 @@ public class BookingService {
     }
 
     // GET ALL
+    @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
     public List<BookingResponseDTO> getAllBookings() {
         return bookingRepository.findAll().stream()
                 .map(BookingResponseDTO::new)
@@ -58,6 +62,7 @@ public class BookingService {
     }
 
     // GET BY USER ID
+        @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST', 'GUEST')")
     public List<BookingResponseDTO> getBookingsByUserId(Long userId) {
         return bookingRepository.findByGuestId(userId).stream()
                 .map(BookingResponseDTO::new)
@@ -65,6 +70,7 @@ public class BookingService {
     }
 
     // UPDATE STATUS (Receptionist Feature)
+    @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
     public BookingResponseDTO updateStatus(Long bookingId, String status, Long receptionistId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -78,7 +84,8 @@ public class BookingService {
         return new BookingResponseDTO(bookingRepository.save(booking));
     }
 
-    // Inside BookingService.java
+   
+    @PreAuthorize("hasRole('MANAGER')")
 public void deleteBooking(Long id) {
     if (!bookingRepository.existsById(id)) {
         throw new RuntimeException("Booking not found");

@@ -4,7 +4,7 @@ import com.online_booking.online_booking_reservation.dtos.UserRequestDTO;
 import com.online_booking.online_booking_reservation.dtos.UserResponseDTO;
 import com.online_booking.online_booking_reservation.entities.User;
 import com.online_booking.online_booking_reservation.repositories.UserRepository;
-
+import org.springframework.security.access.prepost.PreAuthorize; 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +57,7 @@ public class UserService {
 
 
 // Inside UserService.java
-
+@PreAuthorize("hasRole('MANAGER')")
 public UserResponseDTO createStaff(UserRequestDTO dto) {
     if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
         throw new RuntimeException("Email already in use!");
@@ -76,7 +76,7 @@ public UserResponseDTO createStaff(UserRequestDTO dto) {
 }
 
 
-
+@PreAuthorize("hasRole('MANAGER')")
 public List<UserResponseDTO> getAllUsers() {
     return userRepository.findAll().stream()
             .map(user -> new UserResponseDTO(
@@ -88,12 +88,14 @@ public List<UserResponseDTO> getAllUsers() {
             .collect(Collectors.toList());
 }
 
+@PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
 public UserResponseDTO getUserById(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found"));
     return new UserResponseDTO(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().toString());
 }
 
+@PreAuthorize("hasRole('MANAGER')")
 public void deleteUser(Long id) {
     if (!userRepository.existsById(id)) {
         throw new RuntimeException("Cannot delete: User not found");
@@ -101,21 +103,8 @@ public void deleteUser(Long id) {
     userRepository.deleteById(id);
 }
 
-// Update User (Manager updating a guest/staff)
-// public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
-//     User user = userRepository.findById(id)
-//             .orElseThrow(() -> new RuntimeException("User not found"));
-    
-//     user.setFullName(dto.getFullName());
-//     user.setPhone(dto.getPhone());
-//     // Note: Usually we don't allow changing email here to avoid logic issues
-    
-//     User updated = userRepository.save(user);
-//     return new UserResponseDTO(updated.getId(), updated.getFullName(), updated.getEmail(), updated.getPhone(), updated.getRole().toString());
-// }
 
-// Inside UserService.java
-
+@PreAuthorize("hasRole('MANAGER')")
 public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found"));

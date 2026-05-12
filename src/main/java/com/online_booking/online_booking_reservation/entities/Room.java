@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Room {
 
     public enum RoomType { SINGLE, DOUBLE, SUITE, DELUXE }
-    public enum RoomStatus { AVAILABLE, DIRTY, MAINTENANCE }
+    public enum RoomStatus { AVAILABLE, DIRTY, MAINTENANCE,TAKEN }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

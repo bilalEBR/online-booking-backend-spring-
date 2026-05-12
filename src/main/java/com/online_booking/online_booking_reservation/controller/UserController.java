@@ -6,7 +6,7 @@ import com.online_booking.online_booking_reservation.entities.User;
 import com.online_booking.online_booking_reservation.services.UserService;
 
 import jakarta.validation.Valid;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -21,11 +21,11 @@ public class UserController {
         this.userService = userService;
     }
 
-    // POST: http://localhost:8080/api/users/register
+    
 @PostMapping("/register")
 public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequestDTO dto) {
     try {
-        // Change the service call to return a ResponseDTO
+        
         UserResponseDTO createdUser = userService.createUser(dto); 
         return ResponseEntity.ok(createdUser);
     } catch (RuntimeException e) {
@@ -33,12 +33,12 @@ public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequestDTO dto) {
     }
 }
 
-// Inside UserController.java
 
 @PostMapping("/staff")
+@PreAuthorize("hasRole('MANAGER')")
 public ResponseEntity<?> createStaff(@Valid @RequestBody UserRequestDTO dto) {
     try {
-        // We reuse the service logic but override the role explicitly inside the service
+        
         UserResponseDTO createdStaff = userService.createStaff(dto);
         return ResponseEntity.ok(createdStaff);
     } catch (RuntimeException e) {
@@ -48,18 +48,21 @@ public ResponseEntity<?> createStaff(@Valid @RequestBody UserRequestDTO dto) {
 
 // Get all users (For Manager)
 @GetMapping
+  @PreAuthorize("hasRole('MANAGER')")
 public List<UserResponseDTO> getAll() {
     return userService.getAllUsers();
 }
 
 // Get one user
 @GetMapping("/{id}")
+ @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
 public ResponseEntity<UserResponseDTO> getOne(@PathVariable Long id) {
     return ResponseEntity.ok(userService.getUserById(id));
 }
 
 // Update user
 @PutMapping("/{id}")
+@PreAuthorize("hasRole('MANAGER')")
 public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody UserRequestDTO dto) {
     try {
         return ResponseEntity.ok(userService.updateUser(id, dto));
@@ -70,6 +73,7 @@ public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody UserR
 
 // Delete user
 @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('MANAGER')")
 public ResponseEntity<?> delete(@PathVariable Long id) {
     try {
         userService.deleteUser(id);

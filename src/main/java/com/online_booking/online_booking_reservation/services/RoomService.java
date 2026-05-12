@@ -6,6 +6,7 @@ import com.online_booking.online_booking_reservation.entities.Room;
 import com.online_booking.online_booking_reservation.repositories.RoomRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,53 +20,53 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
     public RoomResponseDTO createRoom(RoomRequestDTO dto) {
-        if(roomRepository.findByRoomNumber(dto.getRoomNumber()).isPresent()) {
+        if (roomRepository.findByRoomNumber(dto.getRoomNumber()).isPresent()) {
             throw new RuntimeException("Room number already exists!");
         }
-        Room room = new Room(dto.getRoomNumber(), dto.getRoomType(), dto.getPricePerNight(), dto.getCapacity(), Room.RoomStatus.AVAILABLE, dto.getDescription());
+        Room room = new Room(dto.getRoomNumber(), dto.getRoomType(), dto.getPricePerNight(), dto.getCapacity(),
+                Room.RoomStatus.AVAILABLE, dto.getDescription());
         return new RoomResponseDTO(roomRepository.save(room));
     }
 
-    // public List<RoomResponseDTO> getAllRooms() {
-    //     return roomRepository.findAll().stream()
-    //             .map(RoomResponseDTO::new)
-    //             .collect(Collectors.toList());
-    // }
+    @Autowired
+    private CurrencyService currencyService;
+
+    public List<RoomResponseDTO> getAllRooms() {
+        Double rate = currencyService.getEtbToUsdRate();
+        return roomRepository.findAll().stream()
+                .map(room -> new RoomResponseDTO(room, rate))
+                .collect(Collectors.toList());
+    }
 
 
-    @Autowired private CurrencyService currencyService;
-
-public List<RoomResponseDTO> getAllRooms() {
-    Double rate = currencyService.getEtbToUsdRate();
-    return roomRepository.findAll().stream()
-            .map(room -> new RoomResponseDTO(room, rate))
-            .collect(Collectors.toList());
-}
-
+    
     public RoomResponseDTO getRoomById(Long id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
         return new RoomResponseDTO(room);
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
     public RoomResponseDTO updateRoom(Long id, RoomRequestDTO dto) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-        
+
         room.setRoomNumber(dto.getRoomNumber());
         room.setRoomType(dto.getRoomType());
         room.setPricePerNight(dto.getPricePerNight());
         room.setCapacity(dto.getCapacity());
         room.setDescription(dto.getDescription());
-        
-       if (dto.getStatus() != null) {
-        room.setStatus(dto.getStatus());
-    }
-        
+
+        if (dto.getStatus() != null) {
+            room.setStatus(dto.getStatus());
+        }
+
         return new RoomResponseDTO(roomRepository.save(room));
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
     public void deleteRoom(Long id) {
         if (!roomRepository.existsById(id)) {
             throw new RuntimeException("Room not found");

@@ -33,7 +33,7 @@ public class Booking {
     private String senderFullName;
 
     @ManyToOne
-@JoinColumn(name = "receptionist_id") // This will show as receptionist_id in the DB
+@JoinColumn(name = "receptionist_id", nullable = true) // This will show as receptionist_id in the DB
 private User receptionist;
 
     private LocalDateTime createdAt;

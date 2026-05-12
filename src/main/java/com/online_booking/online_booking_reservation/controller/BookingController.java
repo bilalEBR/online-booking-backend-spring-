@@ -5,10 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.validation.Valid; // For Spring Boot 3
+import jakarta.validation.Valid;
 import com.online_booking.online_booking_reservation.dtos.BookingRequestDTO;
 import com.online_booking.online_booking_reservation.dtos.BookingResponseDTO;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -27,6 +27,7 @@ public class BookingController {
     }
 
   @PostMapping(value = "/create", consumes = { "multipart/form-data" })
+  @PreAuthorize("isAuthenticated()") 
 public ResponseEntity<?> makeBooking(
         @RequestPart("booking") @Valid BookingRequestDTO dto,
         @RequestPart("file") MultipartFile file) {
@@ -47,17 +48,20 @@ public ResponseEntity<?> makeBooking(
 }
 
     @GetMapping
+     @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
     public List<BookingResponseDTO> getAll() {
         return bookingService.getAllBookings();
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST', 'GUEST')")
     public List<BookingResponseDTO> getByUser(@PathVariable Long userId) {
         return bookingService.getBookingsByUserId(userId);
     }
 
     // Receptionist confirms or cancels
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('MANAGER', 'RECEPTIONIST')")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id, 
             @RequestParam String status, 
@@ -69,8 +73,9 @@ public ResponseEntity<?> makeBooking(
         }
     }
 
-    // Inside BookingController.java
+   
 @DeleteMapping("/{id}")
+@PreAuthorize("hasAnyRole('MANAGER')")
 public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
     try {
         bookingService.deleteBooking(id);

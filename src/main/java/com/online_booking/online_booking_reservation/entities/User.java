@@ -33,8 +33,8 @@ public class User {
 
 
     
-    // 2. Link to bookings where this user is the Receptionist
-    @OneToMany(mappedBy = "receptionist", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    
+   @OneToMany(mappedBy = "receptionist")
     private List<Booking> managedBookings;
 
     public User() {}
